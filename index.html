@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SE & S — Registo de Ponto</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0;background:#f0f2f5;color:#103a6b}
+
+  /* LOGIN */
+  .login-fundo{position:fixed;top:0;left:0;width:100%;height:100%;background:#103a6b;display:flex;align-items:center;justify-content:center;z-index:9999}
+  .login-box{background:#fff;border-radius:15px;padding:30px;width:90%;max-width:350px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+  .login-box h1{font-size:28px;margin:0 0 5px}
+  .login-box p{font-size:13px;color:#666;margin:0 0 20px}
+  .login-box input{width:100%;padding:14px;font-size:18px;border:2px solid #b7c7de;border-radius:10px;text-align:center;margin-bottom:15px}
+  .login-box button{width:100%;padding:14px;font-size:18px;font-weight:bold;background:#103a6b;color:#fff;border:none;border-radius:10px;cursor:pointer}
+  .login-erro{color:#b02a2a;font-size:14px;margin-top:10px;display:none}
+
+  /* APP */
+  .app{display:none;padding:12px;max-width:700px;margin:0 auto}
+  h2{font-size:18px;text-align:center;margin:10px 0}
+  .card{background:#fff;border-radius:10px;padding:15px;margin-bottom:15px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+  label{font-weight:bold;font-size:14px;display:block;margin:10px 0 4px}
+  input[type=text],input[type=email],input[type=date],input[type=time],select{width:100%;padding:12px;font-size:16px;border:1px solid #b7c7de;border-radius:8px;color:#103a6b;background:#fff;-webkit-appearance:none}
+  .linha2{display:flex;gap:10px}
+  .linha2>div{flex:1}
+  button{width:100%;padding:14px;font-size:16px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;margin-top:10px;color:#fff;background:#103a6b}
+  .btn-verde{background:#1a7a3d}
+  .btn-cinza{background:#666}
+  .btn-vermelho{background:#b02a2a}
+  .btn-laranja{background:#d4820a}
+  .btn-pequeno{width:auto;padding:8px 15px;font-size:13px;margin:4px 3px;display:inline-block}
+
+  /* TABS */
+  .tabs{display:flex;gap:5px;margin-bottom:15px}
+  .tab{flex:1;text-align:center;padding:12px 5px;background:#dbe5f1;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer}
+  .tab.ativo{background:#103a6b;color:#fff}
+
+  /* LISTA */
+  .registo{border-left:5px solid #103a6b;background:#fff;border-radius:8px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .registo .obra{font-weight:bold;font-size:15px}
+  .registo .trab{font-size:14px;color:#1a7a3d;font-weight:bold}
+  .registo .data{font-size:13px;color:#555}
+  .registo .horas{font-size:14px;margin-top:4px}
+  .registo .tot{font-weight:bold;color:#1a7a3d}
+  .registo .obs{font-size:13px;color:#444;margin-top:4px;font-style:italic}
+  .apagar{float:right;background:#b02a2a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;width:auto;margin:0;cursor:pointer}
+
+  .resumo{background:#103a6b;color:#fff;border-radius:8px;padding:12px;text-align:center;font-weight:bold;margin-bottom:12px}
+
+  /* GESTÃO */
+  .item-lista{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee}
+  .item-lista span{font-size:15px}
+  .item-lista button{width:auto;margin:0;padding:6px 12px;font-size:12px}
+
+  /* RESUMO TABELA */
+  .tabela-resumo{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+  .tabela-resumo th{background:#103a6b;color:#fff;padding:8px;text-align:left}
+  .tabela-resumo td{padding:8px;border-bottom:1px solid #ddd}
+  .tabela-resumo tr:last-child td{font-weight:bold;background:#eef3f9}
+
+  @media print{
+    .login-fundo{display:none!important}
+    .app{display:block!important}
+    .tabs,button,.card:has(label){display:none}
+    .apagar{display:none}
+    body{background:#fff;padding:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div class="login-fundo" id="loginFundo">
+  <div class="login-box">
+    <h1>🔒 SE &amp; S</h1>
+    <p>Registo de Ponto — Obras</p>
+    <input type="password" id="inputPass" placeholder="Password" autofocus>
+    <button onclick="tentarLogin()">Entrar</button>
+    <div class="login-erro" id="loginErro">Password incorreta</div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div class="app" id="app">
+
+  <h2>🏗️ SE &amp; S — Registo de Ponto</h2>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab ativo" id="tabPonto" onclick="mudarTab('ponto')">📝 Ponto</div>
+    <div class="tab" id="tabRegistos" onclick="mudarTab('registos')">📋 Registos</div>
+    <div class="tab" id="tabGestao" onclick="mudarTab('gestao')">⚙️ Gestão</div>
+  </div>
+
+  <!-- ===== TAB PONTO ===== -->
+  <div id="secPonto">
+    <div class="card">
+      <label>Obra</label>
+      <select id="obra"></select>
+
+      <label>Trabalhador</label>
+      <select id="trabalhador"></select>
+
+      <label>Data</label>
+      <input type="date" id="data">
+
+      <div class="linha2">
+        <div><label>Entrada</label><input type="time" id="entrada"></div>
+        <div><label>Saída</label><input type="time" id="saida"></div>
+      </div>
+
+      <div class="linha2">
+        <div><label>Início pausa</label><input type="time" id="pausaIni"></div>
+        <div><label>Fim pausa</label><input type="time" id="pausaFim"></div>
+      </div>
+
+      <label>Observações</label>
+      <input type="text" id="obs" placeholder="opcional">
+
+      <button class="btn-verde" onclick="guardarRegisto()">➕ Guardar registo</button>
+
+      <!-- Registo rápido: mesmo dia e obra, outro trabalhador -->
+      <button class="btn-laranja" onclick="registoRapido()">⚡ Mesmo dia/obra — outro trabalhador</button>
+    </div>
+  </div>
+
+  <!-- ===== TAB REGISTOS ===== -->
+  <div id="secRegistos" style="display:none">
+    <div class="card">
+      <label>Filtrar por obra</label>
+      <select id="filtroObra" onchange="mostrarRegistos()">
+        <option value="">— todas —</option>
+      </select>
+
+      <label>Filtrar por trabalhador</label>
+      <select id="filtroTrab" onchange="mostrarRegistos()">
+        <option value="">— todos —</option>
+      </select>
+
+      <label>Filtrar por mês</label>
+      <input type="month" id="filtroMes" onchange="mostrarRegistos()">
+    </div>
+
+    <div class="resumo" id="resumo">Total: 0h 0m</div>
+    <div id="listaRegistos"></div>
+
+    <button onclick="window.print()">🖨️ Guardar em PDF</button>
+    <button class="btn-cinza" onclick="exportarCSV()">📊 Exportar Excel</button>
+  </div>
+
+  <!-- ===== TAB GESTÃO ===== -->
+  <div id="secGestao" style="display:none">
+
+    <!-- Trabalhadores -->
+    <div class="card">
+      <h2>👷 Trabalhadores</h2>
+      <div id="listaTrabalhadores"></div>
+      <label>Adicionar trabalhador</label>
+      <input type="text" id="novoTrab" placeholder="Nome do trabalhador">
+      <button class="btn-verde" onclick="addTrab()">➕ Adicionar</button>
+    </div>
+
+    <!-- Obras -->
+    <div class="card">
+      <h2>🏗️ Obras</h2>
+      <div id="listaObras"></div>
+      <label>Adicionar obra</label>
+      <input type="text" id="novaObra" placeholder="Nome da obra">
+      <button class="btn-verde" onclick="addObra()">➕ Adicionar</button>
+    </div>
+
+    <!-- Limpar tudo -->
+    <div class="card">
+      <h2>🗑️ Limpar dados</h2>
+      <button class="btn-vermelho" onclick="limparTudo()">Apagar todos os registos</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ============================================
+//  PASSWORD
+// ============================================
+const PASS_HASH = 'ses2026';
+
+document.getElementById('inputPass').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') tentarLogin();
+});
+
+function tentarLogin() {
+  const v = document.getElementById('inputPass').value;
+  if (v === PASS_HASH) {
+    document.getElementById('loginFundo').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    sessionStorage.setItem('logado', '1');
+  } else {
+    document.getElementById('loginErro').style.display = 'block';
+    document.getElementById('inputPass').value = '';
+  }
+}
+
+// manter sessão enquanto o separador estiver aberto
+if (sessionStorage.getItem('logado') === '1') {
+  document.getElementById('loginFundo').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+// ============================================
+//  DADOS
+// ============================================
+let trabalhadores = JSON.parse(localStorage.getItem('trabalhadores') || 'null') ||
+  ['Paulo Torres', 'Rui Pimentel', 'João Gonçalves'];
+
+let obras = JSON.parse(localStorage.getItem('obras') || 'null') ||
+  ['Hotel Vale do Tempo', 'Auchan Faro'];
+
+let registos = JSON.parse(localStorage.getItem('registosPonto') || '[]');
+
+function salvar() {
+  localStorage.setItem('trabalhadores', JSON.stringify(trabalhadores));
+  localStorage.setItem('obras', JSON.stringify(obras));
+  localStorage.setItem('registosPonto', JSON.stringify(registos));
+}
+
+// ============================================
+//  TABS
+// ============================================
+function mudarTab(tab) {
+  document.getElementById('secPonto').style.display = tab === 'ponto' ? 'block' : 'none';
+  document.getElementById('secRegistos').style.display = tab === 'registos' ? 'block' : 'none';
+  document.getElementById('secGestao').style.display = tab === 'gestao' ? 'block' : 'none';
+  document.getElementById('tabPonto').className = 'tab' + (tab === 'ponto' ? ' ativo' : '');
+  document.getElementById('tabRegistos').className = 'tab' + (tab === 'registos' ? ' ativo' : '');
+  document.getElementById('tabGestao').className = 'tab' + (tab === 'gestao' ? ' ativo' : '');
+  if (tab === 'registos') mostrarRegistos();
+  if (tab === 'gestao') mostrarGestao();
+}
+
+// ============================================
+//  PREENCHER SELECTS
+// ============================================
+function preencherSelects() {
+  // Obra
+  const selObra = document.getElementById('obra');
+  const filtObra = document.getElementById('filtroObra');
+  const valObra = selObra.value;
+  const valFiltObra = filtObra.value;
+  selObra.innerHTML = '<option value="">— escolher obra —</option>';
+  filtObra.innerHTML = '<option value="">— todas —</option>';
+  obras.forEach(o => {
+    selObra.innerHTML += `<option value="${o}">${o}</option>`;
+    filtObra.innerHTML += `<option value="${o}">${o}</option>`;
+  });
+  selObra.value = valObra;
+  filtObra.value = valFiltObra;
+
+  // Trabalhador
+  const selTrab = document.getElementById('trabalhador');
+  const filtTrab = document.getElementById('filtroTrab');
+  const valTrab = selTrab.value;
+  const valFiltTrab = filtTrab.value;
+  selTrab.innerHTML = '<option value="">— escolher trabalhador —</option>';
+  filtTrab.innerHTML = '<option value="">— todos —</option>';
+  trabalhadores.forEach(t => {
+    selTrab.innerHTML += `<option value="${t}">${t}</option>`;
+    filtTrab.innerHTML += `<option value="${t}">${t}</option>`;
+  });
+  selTrab.value = valTrab;
+  filtTrab.value = valFiltTrab;
+}
+
+// ============================================
+//  CÁLCULOS
+// ============================================
+function minutos(h1, h2) {
+  if (!h1 || !h2) return 0;
+  const [a, b] = h1.split(':').map(Number);
+  const [c, d] = h2.split(':').map(Number);
+  let dif = (c * 60 + d) - (a * 60 + b);
+  if (dif < 0) dif += 24 * 60;
+  return dif;
+}
+
+function fmt(m) {
+  if (m < 0) m = 0;
+  return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+}
+
+// ============================================
+//  GUARDAR REGISTO
+// ============================================
+function guardarRegisto() {
+  const obra = document.getElementById('obra').value;
+  const trab = document.getElementById('trabalhador').value;
+  const data = document.getElementById('data').value;
+  const entrada = document.getElementById('entrada').value;
+  const saida = document.getElementById('saida').value;
+  const pausaIni = document.getElementById('pausaIni').value;
+  const pausaFim = document.getElementById('pausaFim').value;
+  const obs = document.getElementById('obs').value.trim();
+
+  if (!obra) { alert('Escolhe uma obra.'); return; }
+  if (!trab) { alert('Escolhe um trabalhador.'); return; }
+  if (!data) { alert('Escolhe a data.'); return; }
+  if (!entrada || !saida) { alert('Preenche entrada e saída.'); return; }
+
+  const trabalho = minutos(entrada, saida);
+  const pausa = minutos(pausaIni, pausaFim);
+  const total = trabalho - pausa;
+
+  registos.push({ obra, trab, data, entrada, saida, pausaIni, pausaFim, obs, total });
+  salvar();
+
+  // limpar campos (mantém obra e data)
+  document.getElementById('entrada').value = '';
+  document.getElementById('saida').value = '';
+  document.getElementById('pausaIni').value = '';
+  document.getElementById('pausaFim').value = '';
+  document.getElementById('obs').value = '';
+
+  alert('✅ Registo guardado!');
+}
+
+// Registo rápido: mantém obra, data, horas — só muda o trabalhador
+function registoRapido() {
+  const obra = document.getElementById('obra').value;
+  const data = document.getElementById('data').value;
+  if (!obra || !data) { alert('Preenche primeiro a obra e a data.'); return; }
+  document.getElementById('trabalhador').value = '';
+  document.getElementById('trabalhador').focus();
+}
+
+// ============================================
+//  MOSTRAR REGISTOS
+// ============================================
+function mostrarRegistos() {
+  const fObra = document.getElementById('filtroObra').value;
+  const fTrab = document.getElementById('filtroTrab').value;
+  const fMes = document.getElementById('filtroMes').value;
+  const div = document.getElementById('listaRegistos');
+  div.innerHTML = '';
+  let somaMin = 0;
+
+  const filtrados = registos
+    .map((r, i) => ({ r, i }))
+    .filter(x => {
+      if (fObra && x.r.obra !== fObra) return false;
+      if (fTrab && x.r.trab !== fTrab) return false;
+      if (fMes && !x.r.data.startsWith(fMes)) return false;
+      return true;
+    })
+    .sort((a, b) => b.r.data.localeCompare(a.r.data) || a.r.trab.localeCompare(b.r.trab));
+
+  filtrados.forEach(x => {
+    const r = x.r;
+    somaMin += r.total;
+    const dataFmt = r.data.split('-').reverse().join('/');
+    let pausaTxt = '';
+    if (r.pausaIni && r.pausaFim) pausaTxt = ` · ☕ ${r.pausaIni}-${r.pausaFim}`;
+    div.innerHTML += `
+      <div class="registo">
+        <button class="apagar" onclick="apagarRegisto(${x.i})">🗑️</button>
+        <div class="obra">🏗️ ${r.obra}</div>
+        <div class="trab">👷 ${r.trab}</div>
+        <div class="data">📅 ${dataFmt}</div>
+        <div class="horas">🕐 ${r.entrada} → ${r.saida}${pausaTxt}</div>
+        <div class="horas tot">✅ ${fmt(r.total)}</div>
+        ${r.obs ? `<div class="obs">📝 ${r.obs}</div>` : ''}
+      </div>`;
+  });
+
+  if (filtrados.length === 0) {
+    div.innerHTML = '<div class="card" style="text-align:center;color:#888;">Sem registos.</div>';
+  }
+
+  // Resumo por trabalhador
+  const porTrab = {};
+  filtrados.forEach(x => {
+    if (!porTrab[x.r.trab]) porTrab[x.r.trab] = 0;
+    porTrab[x.r.trab] += x.r.total;
+  });
+
+  let resumoHTML = '';
+  if (Object.keys(porTrab).length > 1) {
+    resumoHTML = '<table class="tabela-resumo"><tr><th>Trabalhador</th><th>Total</th></tr>';
+    Object.keys(porTrab).sort().forEach(t => {
+      resumoHTML += `<tr><td>${t}</td><td>${fmt(porTrab[t])}</td></tr>`;
+    });
+    resumoHTML += `<tr><td>TOTAL</td><td>${fmt(somaMin)}</td></tr></table>`;
+  }
+
+  document.getElementById('resumo').innerHTML =
+    `Total: ${fmt(somaMin)}` + resumoHTML;
+}
+
+function apagarRegisto(i) {
+  if (confirm('Apagar este registo?')) {
+    registos.splice(i, 1);
+    salvar();
+    mostrarRegistos();
+  }
+}
+
+// ============================================
+//  GESTÃO — TRABALHADORES E OBRAS
+// ============================================
+function mostrarGestao() {
+  // Trabalhadores
+  const divT = document.getElementById('listaTrabalhadores');
+  divT.innerHTML = '';
+  trabalhadores.forEach((t, i) => {
+    divT.innerHTML += `
+      <div class="item-lista">
+        <span>👷 ${t}</span>
+        <div>
+          <button class="btn-pequeno btn-laranja" onclick="editarTrab(${i})">✏️</button>
+          <button class="btn-pequeno btn-vermelho" onclick="removerTrab(${i})">🗑️</button>
+        </div>
+      </div>`;
+  });
+
+  // Obras
+  const divO = document.getElementById('listaObras');
+  divO.innerHTML = '';
+  obras.forEach((o, i) => {
+    divO.innerHTML += `
+      <div class="item-lista">
+        <span>🏗️ ${o}</span>
+        <div>
+          <button class="btn-pequeno btn-laranja" onclick="editarObra(${i})">✏️</button>
+          <button class="btn-pequeno btn-vermelho" onclick="removerObra(${i})">🗑️</button>
+        </div>
+      </div>`;
+  });
+}
+
+function addTrab() {
+  const nome = document.getElementById('novoTrab').value.trim();
+  if (!nome) { alert('Escreve o nome.'); return; }
+  if (trabalhadores.includes(nome)) { alert('Já existe.'); return; }
+  trabalhadores.push(nome);
+  salvar();
+  document.getElementById('novoTrab').value = '';
+  preencherSelects();
+  mostrarGestao();
+}
+
+function editarTrab(i) {
+  const novo = prompt('Novo nome:', trabalhadores[i]);
+  if (novo && novo.trim()) {
+    const antigo = trabalhadores[i];
+    trabalhadores[i] = novo.trim();
+    // atualizar registos com o nome antigo
+    registos.forEach(r => { if (r.trab === antigo) r.trab = novo.trim(); });
+    salvar();
+    preencherSelects();
+    mostrarGestao();
+  }
+}
+
+function removerTrab(i) {
+  if (confirm('Remover ' + trabalhadores[i] + '?')) {
+    trabalhadores.splice(i, 1);
+    salvar();
+    preencherSelects();
+    mostrarGestao();
+  }
+}
+
+function addObra() {
+  const nome = document.getElementById('novaObra').value.trim();
+  if (!nome) { alert('Escreve o nome.'); return; }
+  if (obras.includes(nome)) { alert('Já existe.'); return; }
+  obras.push(nome);
+  salvar();
+  document.getElementById('novaObra').value = '';
+  preencherSelects();
+  mostrarGestao();
+}
+
+function editarObra(i) {
+  const novo = prompt('Novo nome:', obras[i]);
+  if (novo && novo.trim()) {
+    const antigo = obras[i];
+    obras[i] = novo.trim();
+    registos.forEach(r => { if (r.obra === antigo) r.obra = novo.trim(); });
+    salvar();
+    preencherSelects();
+    mostrarGestao();
+  }
+}
+
+function removerObra(i) {
+  if (confirm('Remover ' + obras[i] + '?')) {
+    obras.splice(i, 1);
+    salvar();
+    preencherSelects();
+    mostrarGestao();
+  }
+}
+
+function limparTudo() {
+  if (confirm('Tens a certeza? Isto apaga TODOS os registos de ponto!')) {
+    if (confirm('Última confirmação — apagar tudo?')) {
+      registos = [];
+      salvar();
+      mostrarRegistos();
+      alert('Todos os registos foram apagados.');
+    }
+  }
+}
+
+// ============================================
+//  EXPORTAR CSV
+// ============================================
+function exportarCSV() {
+  if (registos.length === 0) { alert('Sem registos.'); return; }
+  let csv = 'Obra;Trabalhador;Data;Entrada;Saida;Pausa Inicio;Pausa Fim;Total;Observacoes\n';
+  registos.forEach(r => {
+    csv += `${r.obra};${r.trab};${r.data.split('-').reverse().join('/')};${r.entrada};${r.saida};${r.pausaIni||''};${r.pausaFim||''};${fmt(r.total)};${r.obs||''}\n`;
+  });
+  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'registo_ponto.csv';
+  link.click();
+}
+
+// ============================================
+//  ARRANQUE
+// ============================================
+document.getElementById('data').valueAsDate = new Date();
+preencherSelects();
+</script>
+
+</body>
+</html>
