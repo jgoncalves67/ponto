@@ -166,7 +166,9 @@
 
     <div class="card">
       <h2>💾 Cópia de segurança</h2>
-      <button class="btn-cinza" onclick="backupJSON()">Descarregar todos os dados</button>
+      <button class="btn-cinza" onclick="backupJSON()">📤 Descarregar todos os dados</button>
+      <button class="btn-laranja" onclick="document.getElementById('ficheiroRestore').click()">📥 Repor dados de um backup</button>
+      <input type="file" id="ficheiroRestore" accept=".json,application/json" style="display:none" onchange="reporBackup(event)">
     </div>
 
     <div class="card">
@@ -203,8 +205,8 @@ const db = firebase.firestore();
 // ============ ESTADO LOCAL ============
 let trabalhadores = [];
 let obras = [];
-let registos = [];          // {id, obra, trab, data, entrada, saida, pausaIni, pausaFim, obs, total, synced}
-let apagadosPendentes = []; // ids para apagar da nuvem
+let registos = [];
+let apagadosPendentes = [];
 let configAlterada = false;
 let editandoId = null;
 let aSincronizar = false;
@@ -221,11 +223,9 @@ function carregarLocal() {
   apagadosPendentes = JSON.parse(localStorage.getItem('rp_apagados') || '[]');
   configAlterada = localStorage.getItem('rp_configAlt') === '1';
 
-  // Valores iniciais (primeira utilização)
   if (!trabalhadores) trabalhadores = JSON.parse(localStorage.getItem('trabalhadores') || 'null') || ['Paulo Torres','Rui Pimentel','João Gonçalves'];
   if (!obras) obras = JSON.parse(localStorage.getItem('obras') || 'null') || ['Hotel Vale do Tempo','Auchan Faro'];
 
-  // Migrar registos da versão antiga (se existirem)
   if (!registos) {
     const antigos = JSON.parse(localStorage.getItem('registosPonto') || '[]');
     registos = antigos.map(r => ({
@@ -308,19 +308,16 @@ async function sincronizar(manual) {
   if (manual) setStatus('sync-off', '⏳ A sincronizar...');
 
   try {
-    // 1. Enviar config (trabalhadores/obras) se foi alterada
     if (configAlterada) {
       await db.collection('config').doc('geral').set({ trabalhadores, obras });
       configAlterada = false;
     }
 
-    // 2. Apagar na nuvem os registos apagados localmente
     for (const id of apagadosPendentes) {
       await db.collection('registos').doc(id).delete();
     }
     apagadosPendentes = [];
 
-    // 3. Enviar registos ainda não sincronizados
     for (const r of registos.filter(x => !x.synced)) {
       const dados = { obra:r.obra, trab:r.trab, data:r.data, entrada:r.entrada, saida:r.saida,
                       pausaIni:r.pausaIni, pausaFim:r.pausaFim, obs:r.obs, total:r.total };
@@ -328,7 +325,6 @@ async function sincronizar(manual) {
       r.synced = true;
     }
 
-    // 4. Descarregar config da nuvem (se não houver alterações locais)
     if (!configAlterada) {
       const cfg = await db.collection('config').doc('geral').get();
       if (cfg.exists) {
@@ -340,7 +336,6 @@ async function sincronizar(manual) {
       }
     }
 
-    // 5. Descarregar registos da nuvem e juntar com os locais pendentes
     const snap = await db.collection('registos').get();
     const remotos = {};
     snap.forEach(doc => { remotos[doc.id] = Object.assign(doc.data(), { id: doc.id, synced: true }); });
@@ -400,7 +395,6 @@ function preencherSelects() {
     sel.value = val;
   });
 
-  // Meses disponíveis nos registos
   const meses = [...new Set(registos.map(r => r.data).filter(d => d).map(d => d.slice(0, 7)))].sort().reverse();
   const nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const selMes = document.getElementById('filtroMes');
@@ -451,7 +445,6 @@ function guardarRegisto() {
   const total = minutos(entrada, saida) - minutos(pausaIni, pausaFim);
 
   if (editandoId) {
-    // Atualizar registo existente
     const r = registos.find(x => x.id === editandoId);
     if (r) {
       Object.assign(r, { obra, trab, data, entrada, saida, pausaIni, pausaFim, obs, total, synced: false });
@@ -565,7 +558,6 @@ function mostrarRegistos() {
     div.innerHTML = '<div class="card" style="text-align:center;color:#888;">Sem registos.</div>';
   }
 
-  // Totais por trabalhador e por obra
   const porTrab = {}, porObra = {};
   filtrados.forEach(r => {
     porTrab[r.trab] = (porTrab[r.trab] || 0) + r.total;
@@ -681,7 +673,82 @@ function limparTudo() {
   alert('Todos os registos foram apagados.');
 }
 
-// ============ EXPORTAR ============
+// ============ BACKUP E RESTAURO ============
+function backupJSON() {
+  const dados = { trabalhadores, obras, registos, exportadoEm: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'backup_ponto.json';
+  a.click();
+}
+
+function reporBackup(event) {
+  const ficheiro = event.target.files[0];
+  if (!ficheiro) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const dados = JSON.parse(e.target.result);
+
+      // Validar se é mesmo um backup desta app
+      if (!dados.registos || !Array.isArray(dados.registos)) {
+        alert('❌ Ficheiro inválido.\nNão parece ser um backup do registo de ponto.');
+        return;
+      }
+
+      const nReg = dados.registos.length;
+      const nTrab = (dados.trabalhadores || []).length;
+      const nObras = (dados.obras || []).length;
+
+      if (!confirm('Encontrei neste backup:\n\n👷 ' + nTrab + ' trabalhadores\n🏗️ ' + nObras + ' obras\n📝 ' + nReg + ' registos\n\nIsto vai SUBSTITUIR os dados atuais.\n\nContinuar?')) {
+        return;
+      }
+
+      // Repor trabalhadores e obras
+      trabalhadores = dados.trabalhadores || [];
+      obras = dados.obras || [];
+
+      // Repor registos (marcar todos para enviar para a nuvem)
+      registos = dados.registos.map(r => ({
+        id: r.id || novoId(),
+        obra: r.obra || '',
+        trab: r.trab || '',
+        data: r.data || '',
+        entrada: r.entrada || '',
+        saida: r.saida || '',
+        pausaIni: r.pausaIni || '',
+        pausaFim: r.pausaFim || '',
+        obs: r.obs || '',
+        total: r.total || 0,
+        synced: false
+      }));
+
+      // Limpar a lista de apagados para não apagar os registos repostos
+      apagadosPendentes = [];
+      configAlterada = true;
+
+      salvarLocal();
+      preencherSelects();
+      mostrarRegistos();
+      atualizarStatusOffline();
+      sincronizar();
+
+      alert('✅ Dados repostos com sucesso!\n\n' + nReg + ' registos recuperados.');
+
+    } catch (erro) {
+      alert('❌ Erro ao ler o ficheiro.\nTens a certeza que é o backup_ponto.json?');
+      console.log('Erro no restauro:', erro);
+    }
+  };
+  reader.readAsText(ficheiro);
+
+  // Limpar para permitir escolher o mesmo ficheiro outra vez
+  event.target.value = '';
+}
+
+// ============ EXPORTAR CSV ============
 function exportarCSV() {
   if (registos.length === 0) return alert('Sem registos.');
   let csv = 'Obra;Trabalhador;Data;Entrada;Saida;Pausa Inicio;Pausa Fim;Total;Observacoes\n';
@@ -692,15 +759,6 @@ function exportarCSV() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'registo_ponto.csv';
-  a.click();
-}
-
-function backupJSON() {
-  const dados = { trabalhadores, obras, registos, exportadoEm: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'backup_ponto.json';
   a.click();
 }
 
