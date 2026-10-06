@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SE &amp; S — Relatório de Assistência</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #103a6b;
+    margin: 0;
+    padding: 0;
+    background: #e8ebef;
+  }
+
+  .barra-botoes {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #103a6b;
+    padding: 8px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  }
+
+  .barra-botoes button {
+    width: auto;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin: 0;
+  }
+
+  button {
+    background: #103a6b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .btn-verde { background: #1a7a3d; }
+  .btn-cinza { background: #5a6a7a; }
+  .btn-laranja { background: #d4820a; }
+  .btn-vermelho { background: #b02a2a; }
+
+  /* Folha do relatório */
+  .folha {
+    width: calc(100% - 24px);
+    max-width: 820px;
+    margin: 12px auto;
+    background: #fff;
+    padding: 16px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  }
+
+  .topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .topo > * {
+    min-width: 0;
+  }
+
+  .logo {
+    font-size: 26px;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+
+  .logo-sub {
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1.4;
+  }
+
+  .titulo {
+    text-align: center;
+    font-size: 19px;
+    font-weight: bold;
+    line-height: 1.15;
+  }
+
+  .contactos {
+    text-align: right;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  .contactos a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 5px;
+  }
+
+  td {
+    border: 1px solid #b7c7de;
+    padding: 3px 5px;
+    vertical-align: middle;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .barra {
+    background: #dbe5f1;
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    border: 1px solid #b7c7de;
+    margin-top: 5px;
+    font-size: 12px;
+  }
+
+  .rot {
+    font-weight: bold;
+    background: #f4f7fb;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  input[type="time"],
+  textarea {
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border: none;
+    outline: none;
+    font-size: 12px;
+    color: #103a6b;
+    background: transparent;
+    font-family: inherit;
+    padding: 2px;
+  }
+
+  input[type="checkbox"] {
+    width: auto;
+    max-width: none;
+    margin-right: 3px;
+  }
+
+  textarea {
+    display: block;
+    min-height: 120px;
+    resize: vertical;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+
+  .chk {
+    white-space: nowrap;
+    margin-right: 12px;
+    display: inline-block;
+    padding: 2px 0;
+    font-size: 12px;
+  }
+
+  .chk input {
+    width: auto;
+    margin-right: 3px;
+  }
+
+  .assin {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+  }
+
+  .assin-box {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #b7c7de;
+  }
+
+  .assin-box .cab {
+    background: #dbe5f1;
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    border-bottom: 1px solid #b7c7de;
+    font-size: 12px;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: 75px;
+    touch-action: none;
+    background: #fff;
+  }
+
+  .assin-box .nome {
+    border-top: 1px solid #b7c7de;
+  }
+
+  .assin-box .nome input {
+    text-align: center;
+    color: #666;
+  }
+
+  .btn-limpar {
+    width: 100%;
+    padding: 4px;
+    font-size: 10px;
+    margin: 0;
+    background: #eef3f9;
+    color: #103a6b;
+    border: none;
+    border-radius: 0;
+    font-weight: normal;
+  }
+
+  .rodape {
+    font-size: 8px;
+    color: #555;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  #painelRel {
+    width: calc(100% - 24px);
+    max-width: 820px;
+    margin: 10px auto;
+    background: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    display: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+  }
+
+  .rel-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    gap: 8px;
+  }
+
+  .rel-item .info {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  .rel-item .info small {
+    color: #777;
+    display: block;
+  }
+
+  .rel-item button {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 12px;
+    margin: 0 0 0 5px;
+  }
+
+  .aviso-email {
+    font-size: 11px;
+    color: #155724;
+    background: #d4edda;
+    border-radius: 6px;
+    padding: 8px;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  /* Mensagem enquanto é gerado o PDF */
+  #overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(16,58,107,.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 20px;
+  }
+
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+
+  /* Ajustes para telemóveis */
+  @media screen and (max-width: 640px) {
+    .barra-botoes {
+      padding: 6px;
+      gap: 5px;
+    }
+
+    .barra-botoes button {
+      flex: 1 1 calc(33.333% - 6px);
+      min-width: 88px;
+      padding: 9px 5px;
+      font-size: 12px;
+    }
+
+    .folha {
+      width: calc(100% - 12px);
+      margin: 6px auto;
+      padding: 10px;
+    }
+
+    .topo {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 6px;
+    }
+
+    .topo > div:first-child {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .topo .contactos {
+      grid-column: 2;
+      grid-row: 1;
+      text-align: right;
+      font-size: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .topo .titulo {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      font-size: 17px;
+    }
+
+    .logo {
+      font-size: 22px;
+    }
+
+    .logo-sub {
+      font-size: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    table {
+      margin-top: 4px;
+    }
+
+    td {
+      padding: 4px 3px;
+      font-size: 10px;
+    }
+
+    .barra {
+      padding: 4px 2px;
+      font-size: 10px;
+    }
+
+    .rot {
+      font-size: 10px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    input[type="time"],
+    textarea {
+      font-size: 11px;
+      padding: 3px 2px;
+    }
+
+    input[type="date"],
+    input[type="time"] {
+      font-size: 10px;
+    }
+
+    .chk {
+      white-space: normal;
+      margin-right: 5px;
+      font-size: 10px;
+    }
+
+    .chk input {
+      margin-right: 2px;
+    }
+
+    .assin {
+      gap: 5px;
+    }
+
+    .assin-box .cab {
+      font-size: 10px;
+      padding: 5px 2px;
+    }
+
+    canvas {
+      height: 68px;
+    }
+
+    .rodape {
+      font-size: 7px;
+    }
+
+    #painelRel {
+      width: calc(100% - 12px);
+      margin: 8px auto;
+      padding: 10px;
+    }
+
+    .rel-item {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .rel-item .info {
+      flex: 1 1 100%;
+    }
+
+    .rel-item button {
+      margin: 0;
+    }
+  }
+
+  /* Ecrãs muito estreitos: cabeçalho e assinaturas empilhados */
+  @media screen and (max-width: 380px) {
+    .topo {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .topo > div:first-child {
+      grid-column: 1;
+      grid-row: 1;
+      text-align: center;
+    }
+
+    .topo .titulo {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .topo .contactos {
+      grid-column: 1;
+      grid-row: 3;
+      text-align: center;
+    }
+
+    .assin {
+      flex-direction: column;
+    }
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      overflow: visible;
+    }
+
+    .barra-botoes,
+    #painelRel,
+    .btn-limpar,
+    .aviso-email,
+    .botoes-fim,
+    #overlay {
+      display: none !important;
+    }
+
+    .folha {
+      width: 100%;
+      max-width: 100%;
+      border: none;
+      box-shadow: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div id="overlay">⏳<br>A gerar PDF...</div>
+
+<div class="barra-botoes">
+  <button class="btn-verde" onclick="guardarRelatorio()">💾 Guardar</button>
+  <button class="btn-cinza" onclick="togglePainel()">📂 Relatórios</button>
+  <button class="btn-laranja" onclick="novoRelatorio()">🧾 Novo</button>
+  <button class="btn-verde" onclick="enviarPDFporEmail()">📧 Email PDF</button>
+  <button onclick="window.print()">🖨️ Imprimir</button>
+</div>
+
+<div id="painelRel">
+  <b>📂 Relatórios guardados</b>
+  <div id="listaRel" style="margin-top:10px"></div>
+</div>
+
+<div class="folha" id="folha">
+  <div class="topo">
+    <div>
+      <div class="logo">SE &amp; S</div>
+      <div class="logo-sub">
+        Segurança Electronica e Serviços<br>
+        PALPITES ECLETICOS – UNIPESSOAL LDA<br>
+        Sociedade Unipessoal por Quotas
+      </div>
+    </div>
+
+    <div class="titulo">RELATÓRIO DE<br>ASSISTÊNCIA</div>
+
+    <div class="contactos">
+      Urbanização 30 de Junho, nº 27<br>
+      8600-306 LAGOS<br>
+      Tel.: (+351) 912 501 599<br>
+      Chamada para a rede móvel nacional<br>
+      <a href="mailto:geral@se-s.pt">geral@se-s.pt</a>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <td class="rot" style="width:16%">N.º PA</td>
+      <td style="width:34%"><input type="text" id="pa"></td>
+      <td class="rot" style="width:16%">Ref. Cliente</td>
+      <td><input type="text" id="refCliente"></td>
+    </tr>
+  </table>
+
+  <table>
+    <tr>
+      <td class="barra" colspan="2" style="width:55%">Identificação do Cliente</td>
+      <td class="barra" colspan="2">Data (selecionar)</td>
+    </tr>
+    <tr>
+      <td class="rot" style="width:15%">Nome:</td>
+      <td><input type="text" id="nome"></td>
+      <td class="rot" style="width:11%">Data:</td>
+      <td style="width:34%"><input type="date" id="data"></td>
+    </tr>
+    <tr>
+      <td class="rot">Morada:</td>
+      <td colspan="3"><input type="text" id="morada"></td>
+    </tr>
+    <tr>
+      <td class="rot">Localidade:</td>
+      <td><input type="text" id="localidade"></td>
+      <td class="rot">Código Postal:</td>
+      <td><input type="text" id="codPostal"></td>
+    </tr>
+    <tr>
+      <td class="rot">NIF:</td>
+      <td><input type="text" id="nif"></td>
+      <td class="rot">E-mail:</td>
+      <td><input type="email" id="email"></td>
+    </tr>
+  </table>
+
+  <div class="barra">Motivo da Deslocação</div>
+  <div style="border:1px solid #b7c7de;border-top:none;padding:5px">
+    <label class="chk"><input type="checkbox" id="mPedido">Pedido do Cliente</label>
+    <label class="chk"><input type="checkbox" id="mAssistencia">Assistência Técnica</label>
+    <span class="chk">Contrato de Manutenção:
+      <label><input type="checkbox" id="mContratoSim">Sim</label>
+      <label><input type="checkbox" id="mContratoNao">Não</label>
+    </span>
+    <label class="chk"><input type="checkbox" id="mOutros">Outros</label>
+  </div>
+
+  <table>
+    <tr>
+      <td class="barra" style="width:50%">Identificação do Equipamento</td>
+      <td class="barra">Tipo de Equipamento</td>
+    </tr>
+    <tr>
+      <td style="padding:0">
+        <table style="margin:0">
+          <tr>
+            <td class="rot" style="width:32%">Modelo:</td>
+            <td><input type="text" id="modelo"></td>
+          </tr>
+          <tr>
+            <td class="rot">Descrição:</td>
+            <td><input type="text" id="eqDescricao"></td>
+          </tr>
+          <tr>
+            <td class="rot">N.º de Série:</td>
+            <td><input type="text" id="numSerie"></td>
+          </tr>
+          <tr>
+            <td class="rot">Outros:</td>
+            <td><input type="text" id="eqOutros"></td>
+          </tr>
+        </table>
+      </td>
+
+      <td style="vertical-align:top">
+        <table style="margin:0">
+          <tr>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tSADI">SADI</label></td>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tCCTV">CCTV</label></td>
+          </tr>
+          <tr>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tSADIR">SADIR</label></td>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tAcessos">Controlo de Acessos</label></td>
+          </tr>
+          <tr>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tVideoporteiro">Videoporteiro</label></td>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tPonto">Registo de Ponto</label></td>
+          </tr>
+          <tr>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tEletricidade">Eletricidade</label></td>
+            <td style="border:none"><label class="chk"><input type="checkbox" id="tOutros">Outros</label></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <table>
+    <tr>
+      <td class="barra" style="width:40%">Serviço Concluído</td>
+      <td class="barra">N.º de Guia</td>
+      <td class="barra">N.º de Código AT</td>
+    </tr>
+    <tr>
+      <td>
+        <label class="chk"><input type="checkbox" id="scSim">SIM</label>
+        <label class="chk"><input type="checkbox" id="scNao">NÃO</label>
+      </td>
+      <td>N.º <input type="text" id="numGuia" style="width:75%;display:inline"></td>
+      <td>N.º <input type="text" id="numCodAT" style="width:75%;display:inline"></td>
+    </tr>
+  </table>
+
+  <div class="barra">Descrição do Serviço Efectuado</div>
+  <div style="border:1px solid #b7c7de;border-top:none">
+    <textarea id="descServico"></textarea>
+  </div>
+
+  <table>
+    <tr>
+      <td class="barra" style="width:50%">
+        Hora Início da Assistência
+        <input type="time" id="horaIni" style="text-align:center;font-size:14px">
+      </td>
+      <td class="barra">
+        Hora Fim da Assistência
+        <input type="time" id="horaFim" style="text-align:center;font-size:14px">
+      </td>
+    </tr>
+  </table>
+
+  <div class="assin">
+    <div class="assin-box">
+      <div class="cab">Identificação do Técnico</div>
+      <canvas id="cvTec"></canvas>
+      <div class="nome">
+        <input type="text" id="nomeTecnico" placeholder="Nome do técnico">
+      </div>
+      <button class="btn-limpar" onclick="limparCanvas('cvTec')">Limpar</button>
+    </div>
+
+    <div class="assin-box">
+      <div class="cab">Identificação do Cliente</div>
+      <canvas id="cvCli"></canvas>
+      <div class="nome">
+        <input type="text" id="nomeCliente" placeholder="Nome do cliente">
+      </div>
+      <button class="btn-limpar" onclick="limparCanvas('cvCli')">Limpar</button>
+    </div>
+  </div>
+
+  <div class="rodape">
+    Não registar passwords, códigos de alarme nem credenciais neste documento.
+    A assinatura do cliente implica a aceitação deste relatório, incluindo observações e pendências.<br><br>
+    Sistemas de videovigilância: o tratamento de imagens deve cumprir o RGPD
+    e as orientações da CNPD (www.cnpd.pt).
+  </div>
+
+  <div class="botoes-fim">
+    <button class="btn-verde" style="width:100%;margin-top:12px" onclick="enviarPDFporEmail()">
+      📧 Enviar PDF por Email
+    </button>
+    <div class="aviso-email">
+      ✅ No <b>iPhone</b>: o PDF é gerado e abre a partilha — escolhe <b>Mail</b> e o PDF vai <b>anexado</b>.<br><br>
+      💻 No <b>PC</b>: o PDF é descarregado e o email abre — arrasta o PDF para o email.
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+const CAMPOS = [
+  'pa','refCliente','nome','data','morada','localidade','codPostal','nif','email',
+  'mPedido','mAssistencia','mContratoSim','mContratoNao','mOutros',
+  'modelo','eqDescricao','numSerie','eqOutros',
+  'tSADI','tSADIR','tVideoporteiro','tEletricidade','tCCTV','tAcessos','tPonto','tOutros',
+  'scSim','scNao','numGuia','numCodAT','descServico','horaIni','horaFim',
+  'nomeTecnico','nomeCliente'
+];
+
+let relId = null;
+
+function v(id) {
+  return (document.getElementById(id) || {}).value || '';
+}
+
+function dataFmt(d) {
+  return d ? d.split('-').reverse().join('/') : '';
+}
+
+function escaparHTML(texto) {
+  return String(texto == null ? '' : texto).replace(/[&<>"']/g, function(caractere) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[caractere];
+  });
+}
+
+/* Recolher e preencher campos */
+function recolherDados() {
+  const d = {};
+
+  CAMPOS.forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    d[id] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+
+  d.assTec = document.getElementById('cvTec').toDataURL();
+  d.assCli = document.getElementById('cvCli').toDataURL();
+
+  return d;
+}
+
+function preencherDados(d) {
+  CAMPOS.forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el || d[id] === undefined) return;
+
+    if (el.type === 'checkbox') {
+      el.checked = d[id];
+    } else {
+      el.value = d[id];
+    }
+  });
+
+  desenharAssinatura('cvTec', d.assTec);
+  desenharAssinatura('cvCli', d.assCli);
+}
+
+function desenharAssinatura(id, dataURL) {
+  const cv = document.getElementById(id);
+  const ctx = cv.getContext('2d');
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  if (!dataURL) return;
+
+  const img = new Image();
+
+  img.onload = function() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  };
+
+  img.src = dataURL;
+}
+
+/* Gravação automática de rascunho */
+function guardarRascunho() {
+  try {
+    localStorage.setItem(
+      'ra_rascunho',
+      JSON.stringify({ relId: relId, dados: recolherDados() })
+    );
+  } catch (e) {
+    console.warn('Não foi possível guardar o rascunho.', e);
+  }
+}
+
+document.addEventListener('input', guardarRascunho);
+document.addEventListener('change', guardarRascunho);
+
+/* Lista de relatórios guardados */
+function lista() {
+  try {
+    const dados = JSON.parse(localStorage.getItem('ra_relatorios') || '[]');
+    return Array.isArray(dados) ? dados : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function salvarLista(l) {
+  localStorage.setItem('ra_relatorios', JSON.stringify(l));
+}
+
+function guardarRelatorio() {
+  const dados = recolherDados();
+  const l = lista();
+
+  if (relId) {
+    const i = l.findIndex(function(r) {
+      return r.id === relId;
+    });
+
+    if (i >= 0) {
+      l[i].dados = dados;
+      l[i].gravadoEm = Date.now();
+    } else {
+      relId = 'r' + Date.now();
+      l.push({ id: relId, dados: dados, gravadoEm: Date.now() });
+    }
+  } else {
+    relId = 'r' + Date.now();
+    l.push({ id: relId, dados: dados, gravadoEm: Date.now() });
+  }
+
+  salvarLista(l);
+  guardarRascunho();
+  renderLista();
+
+  alert(
+    '💾 Relatório guardado!\n\nCliente: ' +
+    (dados.nome || '—') +
+    '\nData: ' +
+    dataFmt(dados.data)
+  );
+}
+
+function renderLista() {
+  const div = document.getElementById('listaRel');
+  const l = lista().slice().reverse();
+
+  if (l.length === 0) {
+    div.innerHTML = '<div style="color:#888;padding:10px">Ainda não há relatórios guardados.</div>';
+    return;
+  }
+
+  div.innerHTML = l.map(function(r) {
+    const dados = r.dados || {};
+    const id = String(r.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const nome = escaparHTML(dados.nome || 'Sem nome');
+    const data = escaparHTML(dataFmt(dados.data) || 'sem data');
+    const pa = escaparHTML(dados.pa || '—');
+    const guardado = new Date(r.gravadoEm).toLocaleString('pt-PT');
+
+    return `
+      <div class="rel-item">
+        <div class="info">
+          <b>${nome}</b> — ${data}
+          <small>PA: ${pa} · Guardado: ${guardado}</small>
+        </div>
+        <div>
+          <button class="btn-verde" onclick="abrirRelatorio('${id}')">Abrir</button>
+          <button class="btn-vermelho" onclick="apagarRelatorio('${id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function abrirRelatorio(id) {
+  const r = lista().find(function(x) {
+    return x.id === id;
+  });
+
+  if (!r) return;
+
+  relId = id;
+  preencherDados(r.dados || {});
+  guardarRascunho();
+  togglePainel(true);
+  window.scrollTo(0, 0);
+}
+
+function apagarRelatorio(id) {
+  if (!confirm('Apagar este relatório guardado?')) return;
+
+  salvarLista(lista().filter(function(r) {
+    return r.id !== id;
+  }));
+
+  renderLista();
+}
+
+function togglePainel(forcarFechar) {
+  const painel = document.getElementById('painelRel');
+
+  if (forcarFechar === true) {
+    painel.style.display = 'none';
+    return;
+  }
+
+  painel.style.display = painel.style.display === 'block' ? 'none' : 'block';
+
+  if (painel.style.display === 'block') {
+    renderLista();
+  }
+}
+
+function novoRelatorio() {
+  if (!confirm('Começar um relatório novo em branco?\n\n(O atual fica guardado se carregaste em 💾)')) {
+    return;
+  }
+
+  relId = null;
+
+  CAMPOS.forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    if (el.type === 'checkbox') {
+      el.checked = false;
+    } else {
+      el.value = '';
+    }
+  });
+
+  document.getElementById('nomeTecnico').value = 'João Gonçalves';
+
+  limparCanvas('cvTec');
+  limparCanvas('cvCli');
+
+  document.getElementById('data').valueAsDate = new Date();
+
+  guardarRascunho();
+  window.scrollTo(0, 0);
+}
+
+/* Gerar PDF: usa sempre o formato do relatório, mesmo quando aberto no telemóvel */
+async function gerarPDF() {
+  const folha = document.getElementById('folha');
+  const estiloOriginal = folha.getAttribute('style');
+
+  const assinaturas = [
+    document.getElementById('cvTec').toDataURL(),
+    document.getElementById('cvCli').toDataURL()
+  ];
+
+  /*
+    O relatório é temporariamente colocado na largura normal de ecrã.
+    Assim, o PDF não fica estreito ou desformatado por ter sido criado no telemóvel.
+  */
+  folha.style.width = '820px';
+  folha.style.maxWidth = 'none';
+  folha.style.margin = '0';
+  folha.style.padding = '16px';
+
+  try {
+    await new Promise(function(resolve) {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(resolve);
+      });
+    });
+
+    const canvas = await html2canvas(folha, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      windowWidth: 900,
+      windowHeight: Math.max(window.innerHeight, folha.scrollHeight + 100),
+
+      onclone: function(doc) {
+        const folhaClonada = doc.getElementById('folha');
+
+        if (folhaClonada) {
+          folhaClonada.style.width = '820px';
+          folhaClonada.style.maxWidth = 'none';
+          folhaClonada.style.margin = '0';
+          folhaClonada.style.padding = '16px';
+        }
+
+        /* Campos de texto */
+        doc.querySelectorAll('input[type="text"], input[type="email"]').forEach(function(inp) {
+          const span = doc.createElement('span');
+          span.textContent = inp.value || '\u00a0';
+          span.style.cssText =
+            'display:inline-block;max-width:100%;padding:2px;' +
+            'font-size:12px;color:#103a6b;overflow-wrap:anywhere;';
+
+          if (inp.parentElement && inp.parentElement.classList.contains('nome')) {
+            span.style.textAlign = 'center';
+            span.style.width = '100%';
+          }
+
+          inp.parentNode.replaceChild(span, inp);
+        });
+
+        /* Data */
+        doc.querySelectorAll('input[type="date"]').forEach(function(inp) {
+          const span = doc.createElement('span');
+          span.textContent = inp.value ? inp.value.split('-').reverse().join('/') : '\u00a0';
+          span.style.cssText =
+            'display:inline-block;max-width:100%;padding:2px;' +
+            'font-size:12px;color:#103a6b;overflow-wrap:anywhere;';
+          inp.parentNode.replaceChild(span, inp);
+        });
+
+        /* Horas */
+        doc.querySelectorAll('input[type="time"]').forEach(function(inp) {
+          const span = doc.createElement('span');
+          span.textContent = inp.value || '--:--';
+          span.style.cssText =
+            'display:block;width:100%;text-align:center;' +
+            'font-size:14px;color:#103a6b;';
+          inp.parentNode.replaceChild(span, inp);
+        });
+
+        /* Descrição do serviço */
+        doc.querySelectorAll('textarea').forEach(function(textarea) {
+          const texto = doc.createElement('div');
+          texto.textContent = textarea.value || ' ';
+          texto.style.cssText =
+            'box-sizing:border-box;width:100%;min-height:120px;padding:4px;' +
+            'font-size:12px;line-height:1.4;color:#103a6b;' +
+            'white-space:pre-wrap;overflow-wrap:anywhere;';
+          textarea.parentNode.replaceChild(texto, textarea);
+        });
+
+        /* Caixas assinaladas */
+        doc.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+          const span = doc.createElement('span');
+          span.textContent = cb.checked ? '☒ ' : '☐ ';
+          span.style.cssText = 'font-size:12px;color:#103a6b;';
+          cb.parentNode.replaceChild(span, cb);
+        });
+
+        /* Assinaturas */
+        doc.querySelectorAll('canvas').forEach(function(cv, i) {
+          const img = doc.createElement('img');
+          img.src = assinaturas[i] || cv.toDataURL();
+          img.style.cssText =
+            'display:block;width:100%;height:75px;object-fit:contain;background:#fff;';
+          cv.parentNode.replaceChild(img, cv);
+        });
+
+        doc.querySelectorAll('.btn-limpar, .botoes-fim').forEach(function(el) {
+          el.style.display = 'none';
+        });
+      }
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const pagW = 210;
+    const pagH = 297;
+    const margem = 6;
+    const areaW = pagW - margem * 2;
+    const areaH = pagH - margem * 2;
+    const pxParaMm = 25.4 / 96;
+
+    const larguraCanvasMm = canvas.width * pxParaMm;
+    const alturaCanvasMm = canvas.height * pxParaMm;
+
+    /* Redimensiona proporcionalmente para caber numa folha A4 */
+    const escala = Math.min(
+      areaW / larguraCanvasMm,
+      areaH / alturaCanvasMm
+    );
+
+    const imgWmm = larguraCanvasMm * escala;
+    const imgHmm = alturaCanvasMm * escala;
+    const x = (pagW - imgWmm) / 2;
+    const y = margem;
+
+    pdf.addImage(
+      canvas.toDataURL('image/jpeg', 0.92),
+      'JPEG',
+      x,
+      y,
+      imgWmm,
+      imgHmm
+    );
+
+    return pdf;
+  } finally {
+    if (estiloOriginal === null) {
+      folha.removeAttribute('style');
+    } else {
+      folha.setAttribute('style', estiloOriginal);
+    }
+  }
+}
+
+/* Enviar PDF por email ou abrir a partilha do telemóvel */
+async function enviarPDFporEmail() {
+  document.getElementById('overlay').style.display = 'flex';
+
+  try {
+    const pdf = await gerarPDF();
+
+    const nomeFicheiro =
+      'Relatorio_' +
+      (v('nome') ? v('nome').trim().replace(/\s+/g, '_') : 'Assistencia') +
+      (v('data') ? '_' + v('data') : '') +
+      '.pdf';
+
+    const assunto =
+      'Relatório de Assistência — ' +
+      (v('nome') || 'Cliente') +
+      (v('data') ? ' — ' + dataFmt(v('data')) : '');
+
+    const corpo =
+      'Exmos. Senhores,\n\n' +
+      'Segue em anexo o relatório de assistência técnica' +
+      (v('data') ? ' de ' + dataFmt(v('data')) : '') +
+      '.\n\nCom os melhores cumprimentos,\n' +
+      (v('nomeTecnico') || 'SE & S') +
+      '\nSE & S — Segurança Electronica e Serviços\n' +
+      'Tel.: (+351) 912 501 599 · geral@se-s.pt';
+
+    const blob = pdf.output('blob');
+    const ficheiro = new File([blob], nomeFicheiro, {
+      type: 'application/pdf'
+    });
+
+    /* Telemóvel: partilha nativa com o PDF anexado */
+    if (navigator.canShare && navigator.canShare({ files: [ficheiro] })) {
+      document.getElementById('overlay').style.display = 'none';
+
+      try {
+        await navigator.share({
+          files: [ficheiro],
+          title: assunto,
+          text: corpo
+        });
+      } catch (e) {
+        /* A partilha foi cancelada pelo utilizador */
+      }
+
+      return;
+    }
+
+    /* Computador: descarrega o PDF e abre o email */
+    pdf.save(nomeFicheiro);
+
+    const mailto =
+      'mailto:' + encodeURIComponent(v('email')) +
+      '?cc=' + encodeURIComponent('geral@se-s.pt') +
+      '&subject=' + encodeURIComponent(assunto) +
+      '&body=' + encodeURIComponent(
+        corpo + '\n\n⚠️ ANEXA o ficheiro PDF: ' +
+        nomeFicheiro + ' (está nas Transferências)'
+      );
+
+    document.getElementById('overlay').style.display = 'none';
+    window.location.href = mailto;
+
+    setTimeout(function() {
+      alert(
+        '📎 O PDF foi descarregado para as Transferências.\n\n' +
+        'Anexa o ficheiro "' + nomeFicheiro + '" ao email que abriu.'
+      );
+    }, 800);
+  } catch (e) {
+    document.getElementById('overlay').style.display = 'none';
+    alert('❌ Erro ao gerar o PDF. Tenta novamente.\n\n' + e.message);
+    console.error(e);
+  }
+}
+
+/* Assinatura no ecrã */
+function iniciarCanvas(id) {
+  const cv = document.getElementById(id);
+  const rect = cv.getBoundingClientRect();
+
+  cv.width = Math.max(1, Math.round(rect.width));
+  cv.height = Math.max(1, Math.round(rect.height));
+
+  const ctx = cv.getContext('2d');
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#103a6b';
+
+  let desenhar = false;
+
+  function pos(e) {
+    const r = cv.getBoundingClientRect();
+
+    return {
+      x: (e.clientX - r.left) * (cv.width / r.width),
+      y: (e.clientY - r.top) * (cv.height / r.height)
+    };
+  }
+
+  cv.addEventListener('pointerdown', function(e) {
+    desenhar = true;
+    cv.setPointerCapture(e.pointerId);
+
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    e.preventDefault();
+  });
+
+  cv.addEventListener('pointermove', function(e) {
+    if (!desenhar) return;
+
+    const p = pos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    e.preventDefault();
+  });
+
+  function terminarDesenho() {
+    if (!desenhar) return;
+    desenhar = false;
+    guardarRascunho();
+  }
+
+  cv.addEventListener('pointerup', terminarDesenho);
+  cv.addEventListener('pointercancel', terminarDesenho);
+}
+
+function limparCanvas(id) {
+  const cv = document.getElementById(id);
+  cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  guardarRascunho();
+}
+
+/* Início */
+window.addEventListener('load', function() {
+  iniciarCanvas('cvTec');
+  iniciarCanvas('cvCli');
+
+  let rascunho = null;
+
+  try {
+    rascunho = JSON.parse(localStorage.getItem('ra_rascunho') || 'null');
+  } catch (e) {
+    rascunho = null;
+  }
+
+  if (rascunho && rascunho.dados) {
+    relId = rascunho.relId || null;
+    preencherDados(rascunho.dados);
+  } else {
+    document.getElementById('nomeTecnico').value = 'João Gonçalves';
+    document.getElementById('data').valueAsDate = new Date();
+  }
+});
+</script>
+
+</body>
+</html>
